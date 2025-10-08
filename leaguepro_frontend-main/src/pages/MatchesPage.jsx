@@ -7,11 +7,92 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+
+// --- Styles ---
+const styles = {
+  page: {
+    minHeight: "100vh",
+    padding: { xs: 2, md: 4 },
+    background: "linear-gradient(135deg, #2c3e50, #4a546e)",
+    fontFamily: "'Segoe UI', 'Roboto', sans-serif",
+    color: '#f0f0f0',
+  },
+  glassCard: {
+    padding: { xs: '2rem', md: '2.5rem' },
+    borderRadius: "20px",
+    background: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
+  },
+  header: {
+    fontWeight: "bold",
+    color: "#a88beb",
+    marginBottom: "1.5rem",
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    padding: "12px 15px",
+    borderRadius: "10px",
+    background: "rgba(0, 0, 0, 0.2)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    color: "#fff",
+    fontSize: "1rem",
+    marginBottom: '1rem',
+    boxSizing: 'border-box', // Ensures padding doesn't affect width
+  },
+  primaryButton: {
+    marginTop: 2,
+    width: "100%",
+    padding: "12px",
+    borderRadius: "10px",
+    color: "#fff",
+    fontWeight: "bold",
+    background: "linear-gradient(90deg, #6f00ff, #9f55ff)",
+    transition: 'transform 0.2s ease-in-out',
+    "&:hover": {
+      background: "linear-gradient(90deg, #9f55ff, #6f00ff)",
+      transform: 'scale(1.02)',
+    },
+    "&:disabled": {
+        background: 'rgba(0,0,0,0.2)',
+        color: 'rgba(255,255,255,0.3)',
+    }
+  },
+  dndContainer: {
+    minHeight: 250,
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    padding: 1,
+  },
+  dndItem: {
+    padding: "8px",
+    marginBottom: "8px",
+    borderRadius: 1,
+    background: 'rgba(170, 139, 235, 0.4)', // Purple accent
+    color: "#fff",
+    textAlign: "center",
+  },
+  matchCard: {
+    borderRadius: "16px",
+    cursor: "pointer",
+    background: "rgba(255, 255, 255, 0.1)",
+    backdropFilter: "blur(10px)",
+    border: "1px solid rgba(255, 255, 255, 0.2)",
+    color: "#fff",
+    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    "&:hover": {
+      boxShadow: "0 10px 30px rgba(170, 139, 235, 0.4)",
+      transform: "translateY(-5px)",
+    },
+  },
+};
 
 const MatchesPage = () => {
   const [teams, setTeams] = useState([]);
@@ -71,30 +152,33 @@ const MatchesPage = () => {
     const { source, destination } = result;
     if (!destination) return;
 
-    const sourceList =
-      source.droppableId === "players"
-        ? [...players]
-        : source.droppableId === "teamA"
-        ? [...teamA]
-        : [...teamB];
+    // Logic to move items between lists
+    let sourceList;
+    let destList;
+    let setSourceList;
+    let setDestList;
 
-    const destinationList =
-      destination.droppableId === "players"
-        ? [...players]
-        : destination.droppableId === "teamA"
-        ? [...teamA]
-        : [...teamB];
+    const getList = (id) => {
+        if (id === 'players') return [players, setPlayers];
+        if (id === 'teamA') return [teamA, setTeamA];
+        return [teamB, setTeamB];
+    };
 
-    const [movedItem] = sourceList.splice(source.index, 1);
-    destinationList.splice(destination.index, 0, movedItem);
+    [sourceList, setSourceList] = getList(source.droppableId);
+    [destList, setDestList] = getList(destination.droppableId);
+    
+    const newSourceList = [...sourceList];
+    const [movedItem] = newSourceList.splice(source.index, 1);
 
-    if (source.droppableId === "players") setPlayers(sourceList);
-    if (source.droppableId === "teamA") setTeamA(sourceList);
-    if (source.droppableId === "teamB") setTeamB(sourceList);
-
-    if (destination.droppableId === "players") setPlayers(destinationList);
-    if (destination.droppableId === "teamA") setTeamA(destinationList);
-    if (destination.droppableId === "teamB") setTeamB(destinationList);
+    if (source.droppableId === destination.droppableId) {
+        newSourceList.splice(destination.index, 0, movedItem);
+        setSourceList(newSourceList);
+    } else {
+        const newDestList = [...destList];
+        newDestList.splice(destination.index, 0, movedItem);
+        setSourceList(newSourceList);
+        setDestList(newDestList);
+    }
   };
 
   const createMatch = async () => {
@@ -108,7 +192,7 @@ const MatchesPage = () => {
         title: newMatch.title,
         matchDate: newMatch.matchDate,
         venue: newMatch.venue,
-        teamAId: newMatch.teamA,
+        teamAId: teamAName,
         teamBId: teamBName,
         teamAPlayers: teamA.map((player) => player.id),
         teamBPlayers: teamB.map((player) => player.id),
@@ -127,349 +211,137 @@ const MatchesPage = () => {
   };
 
   return (
-    <Box sx={{ padding: 4 }}>
-      {/* Existing Matches */}
-      <Box sx={{ marginBottom: 4 }}>
-        <Typography
-          variant="h4"
-          gutterBottom
-          sx={{ fontWeight: "bold", color: "#1976d2" }}
-        >
-          Existing Matches
-        </Typography>
-        <Grid container spacing={3}>
-          {matches.map((match) => (
-            <Grid
-              item
-              xs={12}
-              sm={6}
-              md={4}
-              key={match.id}
-              component={motion.div}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card
-                sx={{
-                  boxShadow: 4,
-                  borderRadius: 3,
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  "&:hover": { boxShadow: 8, transform: "scale(1.02)" },
-                  transition: "transform 0.3s ease",
-                }}
-                onClick={() => handleMatchClick(match.id)}
-              >
-                <CardContent
-                  sx={{
-                    backgroundColor: "#e3f2fd",
-                    textAlign: "center",
-                    padding: 3,
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "bold", color: "#0d47a1" }}
-                  >
-                    {match.teamAName || "Team A"} vs{" "}
-                    {match.teamBName || "Team B"}
-                  </Typography>
+    <Box sx={styles.page}>
+      <Grid container spacing={4}>
+        {/* Left: Create Match */}
+        <Grid item xs={12} md={5}>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Box sx={styles.glassCard}>
+                <Typography variant="h5" sx={styles.header}>
+                    Create New Match
+                </Typography>
+
+                <input type="text" placeholder="Match Title" name="title" value={newMatch.title} onChange={handleInputChange} style={styles.input} />
+                <input type="date" name="matchDate" value={newMatch.matchDate} onChange={handleInputChange} style={styles.input} />
+                <input type="text" placeholder="Venue" name="venue" value={newMatch.venue} onChange={handleInputChange} style={styles.input} />
                 
-                </CardContent>
-                <CardActions
-                  sx={{
-                    justifyContent: "center",
-                    backgroundColor: "#bbdefb",
-                    padding: 1,
-                  }}
-                >
-                  <Typography variant="body2" color="textSecondary">
-                  Venue: {match.venue || "TBD"}
-                  </Typography>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Grid container spacing={2}>
+                        {/* Players */}
+                        <Grid item xs={12}>
+                            <Typography sx={{...styles.header, fontSize: '1.2rem', textAlign: 'left'}}>Players Pool</Typography>
+                            <Droppable droppableId="players">
+                                {(provided) => (
+                                    <Box ref={provided.innerRef} {...provided.droppableProps} sx={styles.dndContainer}>
+                                        {players.map((player, index) => (
+                                            <Draggable key={player.id} draggableId={player.id.toString()} index={index}>
+                                                {(provided) => (
+                                                    <Box ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} sx={styles.dndItem}>
+                                                        {player.name}
+                                                    </Box>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </Box>
+                                )}
+                            </Droppable>
+                        </Grid>
 
-      {/* Create New Match */}
-      <Box
-        component={motion.div}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        sx={{
-          marginBottom: 4,
-          padding: 4,
-          border: "1px solid #ccc",
-          borderRadius: 3,
-          boxShadow: 4,
-          backgroundColor: "#f9f9f9",
-        }}
-      >
-        <Typography
-          variant="h4"
-          gutterBottom
-          sx={{ fontWeight: "bold", color: "#1976d2" }}
-        >
-          Create New Match
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <input
-              type="text"
-              placeholder="Match Title"
-              name="title"
-              value={newMatch.title}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                marginBottom: "16px",
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <input
-              type="date"
-              name="matchDate"
-              value={newMatch.matchDate}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                marginBottom: "16px",
-              }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <input
-              type="text"
-              placeholder="Venue"
-              name="venue"
-              value={newMatch.venue}
-              onChange={handleInputChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                marginBottom: "16px",
-              }}
-            />
-          </Grid>
+                        {/* Team A & B */}
+                        <Grid item xs={12} sm={6}>
+                            <Typography sx={{...styles.header, fontSize: '1.2rem', textAlign: 'left'}}>Team A</Typography>
+                            <select value={teamAName} onChange={(e) => setTeamAName(e.target.value)} style={styles.input}>
+                                <option value="" disabled>Select Team A</option>
+                                {teams.map((team) => (<option key={team.id} value={team.name}>{team.name}</option>))}
+                            </select>
+                            <Droppable droppableId="teamA">
+                                {(provided) => (
+                                    <Box ref={provided.innerRef} {...provided.droppableProps} sx={styles.dndContainer}>
+                                        {teamA.map((player, index) => (
+                                            <Draggable key={player.id} draggableId={player.id.toString()} index={index}>
+                                                {(provided) => (
+                                                    <Box ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} sx={styles.dndItem}>
+                                                        {player.name}
+                                                    </Box>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </Box>
+                                )}
+                            </Droppable>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <Typography sx={{...styles.header, fontSize: '1.2rem', textAlign: 'left'}}>Team B</Typography>
+                            <select value={teamBName} onChange={(e) => setTeamBName(e.target.value)} style={styles.input}>
+                                <option value="" disabled>Select Team B</option>
+                                {teams.map((team) => (<option key={team.id} value={team.name}>{team.name}</option>))}
+                            </select>
+                            <Droppable droppableId="teamB">
+                                {(provided) => (
+                                    <Box ref={provided.innerRef} {...provided.droppableProps} sx={styles.dndContainer}>
+                                        {teamB.map((player, index) => (
+                                            <Draggable key={player.id} draggableId={player.id.toString()} index={index}>
+                                                {(provided) => (
+                                                    <Box ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} sx={styles.dndItem}>
+                                                        {player.name}
+                                                    </Box>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </Box>
+                                )}
+                            </Droppable>
+                        </Grid>
+                    </Grid>
+                </DragDropContext>
+
+                <Button onClick={createMatch} disabled={teamA.length < 11 || teamB.length < 11} sx={styles.primaryButton}>
+                    Create Match
+                </Button>
+            </Box>
+          </motion.div>
         </Grid>
 
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Grid container spacing={3}>
-            {/* Players Pool */}
-            <Grid item xs={12} sm={4}>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: "bold", color: "#1976d2" }}
-              >
-                Available Players
-              </Typography>
-              <Droppable droppableId="players">
-                {(provided) => (
-                  <Box
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    sx={{
-                      padding: 2,
-                      minHeight: 300,
-                      border: "1px solid #ccc",
-                      borderRadius: 2,
-                      backgroundColor: "#f5f5f5",
-                    }}
-                  >
-                    {players.map((player, index) => (
-                      <Draggable
-                        key={player.id}
-                        draggableId={player.id.toString()}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <Box
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            sx={{
-                              padding: 1,
-                              marginBottom: 1,
-                              backgroundColor: "#ffffff",
-                              borderRadius: 1,
-                              boxShadow: 2,
-                              textAlign: "center",
-                            }}
-                          >
-                            {player.name}
-                          </Box>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </Box>
-                )}
-              </Droppable>
+        {/* Right: Existing Matches */}
+        <Grid item xs={12} md={7}>
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Typography variant="h5" sx={{ ...styles.header, textAlign: 'left' }}>
+              Existing Matches
+            </Typography>
+            <Grid container spacing={3}>
+              {matches.map((match) => (
+                <Grid item xs={12} sm={6} key={match.id}>
+                  <Card onClick={() => handleMatchClick(match.id)} sx={styles.matchCard}>
+                    <CardContent sx={{ textAlign: "center" }}>
+                      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        {match.teamAName || "Team A"} vs {match.teamBName || "Team B"}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 1, opacity: 0.8 }}>
+                        Venue: {match.venue || "TBD"}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.8 }}>
+                        Date: {match.matchDate || "TBD"}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-
-            {/* Team A */}
-            <Grid item xs={12} sm={4}>
-              <select
-                value={teamAName}
-                onChange={(e) => setTeamAName(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  marginBottom: "16px",
-                }}
-              >
-                <option value="" disabled>
-                  Select Team A
-                </option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-              <Droppable droppableId="teamA">
-                {(provided) => (
-                  <Box
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    sx={{
-                      padding: 2,
-                      minHeight: 300,
-                      border: "1px solid #ccc",
-                      borderRadius: 2,
-                      backgroundColor: "#e3f2fd",
-                    }}
-                  >
-                    {teamA.map((player, index) => (
-                      <Draggable
-                        key={player.id}
-                        draggableId={player.id.toString()}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <Box
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            sx={{
-                              padding: 1,
-                              marginBottom: 1,
-                              backgroundColor: "#bbdefb",
-                              borderRadius: 1,
-                              boxShadow: 2,
-                              textAlign: "center",
-                            }}
-                          >
-                            {player.name}
-                          </Box>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </Box>
-                )}
-              </Droppable>
-            </Grid>
-
-            {/* Team B */}
-            <Grid item xs={12} sm={4}>
-              <select
-                value={teamBName}
-                onChange={(e) => setTeamBName(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: "8px",
-                  border: "1px solid #ccc",
-                  marginBottom: "16px",
-                }}
-              >
-                <option value="" disabled>
-                  Select Team B
-                </option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.name}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-              <Droppable droppableId="teamB">
-                {(provided) => (
-                  <Box
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    sx={{
-                      padding: 2,
-                      minHeight: 300,
-                      border: "1px solid #ccc",
-                      borderRadius: 2,
-                      backgroundColor: "#fff8e1",
-                    }}
-                  >
-                    {teamB.map((player, index) => (
-                      <Draggable
-                        key={player.id}
-                        draggableId={player.id.toString()}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <Box
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            sx={{
-                              padding: 1,
-                              marginBottom: 1,
-                              backgroundColor: "#ffe082",
-                              borderRadius: 1,
-                              boxShadow: 2,
-                              textAlign: "center",
-                            }}
-                          >
-                            {player.name}
-                          </Box>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </Box>
-                )}
-              </Droppable>
-            </Grid>
-          </Grid>
-        </DragDropContext>
-
-        <Button
-          onClick={createMatch}
-          disabled={teamA.length < 11 || teamB.length < 11}
-          sx={{
-            marginTop: 3,
-            padding: "10px 20px",
-            borderRadius: "8px",
-            backgroundColor: "#1976d2",
-            color: "#fff",
-            "&:hover": { backgroundColor: "#1565c0" },
-          }}
-          variant="contained"
-        >
-          Create Match
-        </Button>
-      </Box>
+          </motion.div>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

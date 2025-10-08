@@ -1,8 +1,8 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', 'Roboto', sans-serif;
-    background-color: #f4f6f9;
-    color: #1f2937;
+    background: linear-gradient(135deg, #1f1c2c, #928dab);
+    color: var(--text-light);
   }
   
   a {
@@ -19,9 +19,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #0f172a;
+    background: var(--primary-gradient);
     padding: 0rem 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -37,25 +37,25 @@ body {
   }
   
   .nav-links a {
-    color: #e5e7eb;
+    color: #f3f3f3;
     font-weight: 600;
     padding: 0.6rem 1rem;
-    border-radius: 6px;
+    border-radius: 9999px;
     transition: background 0.3s ease, color 0.3s ease;
   }
   
   .nav-links a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #facc15;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #fff;
   }
   
   .live-fixtures {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    background: transparent;
     color: #f3f4f6;
     padding: 4rem 2rem;
     text-align: center;
     position: relative;
-    box-shadow: inset 0 12px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
   }
   
   .live-fixtures h2 {
@@ -79,12 +79,13 @@ body {
   }
   
   .match-card.live-card {
-    background-color: #f9fafb;
-    color: #1f2937;
+    background-color: var(--glass-bg);
+    color: #fff;
     padding: 1.5rem;
-    border-radius: 12px;
+    border-radius: 14px;
     width: 260px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-light);
     border-top: 4px solid #ef4444;
     position: relative; /* Ensure positioning context for the .status.live */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -126,7 +127,7 @@ body {
     justify-content: space-between;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #374151;
+    color: rgba(255,255,255,0.85);
     margin-bottom: 0.5rem;
   }
   
@@ -147,11 +148,11 @@ body {
   .location {
     font-style: italic;
     font-size: 0.9rem;
-    color: #6b7280;
+    color: rgba(255,255,255,0.75);
   }
   
   .features, .matches {
-    background-color: #fff;
+    background: transparent;
     padding: 4rem 2rem;
     text-align: center;
   }
@@ -164,7 +165,7 @@ body {
   
   .features p,
   .matches p {
-    color: #6b7280;
+    color: rgba(255,255,255,0.8);
     font-size: 1rem;
   }
   
@@ -177,10 +178,11 @@ body {
   }
   
   .card {
-    background: #f9fafb;
+    background: var(--glass-bg);
     padding: 2rem;
     border-radius: 16px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-light);
     width: 260px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
@@ -192,24 +194,24 @@ body {
   
   .card h4 {
     font-size: 1.3rem;
-    color: #1e3a8a;
+    color: #dbe6ff;
     margin-bottom: 0.5rem;
   }
   
   .card p {
-    color: #4b5563;
+    color: rgba(255,255,255,0.85);
   }
   
   .card a {
     display: inline-block;
     margin-top: 0.8rem;
-    font-weight: 500;
-    color: #2563eb;
+    font-weight: 600;
+    color: #b4c6ff;
   }
   
   .footer {
-    background-color: #0f172a;
-    color: #e5e7eb;
+    background: var(--primary-gradient);
+    color: #fff;
     padding: 2rem;
     text-align: center;
     margin-top: 3rem;
@@ -236,16 +238,16 @@ body {
     margin-top: 2rem;
     padding: 0.6rem 1.4rem;
     font-size: 1rem;
-    border-radius: 8px;
-    background-color: #1d4ed8;
+    border-radius: 10px;
+    background: var(--primary-gradient);
     color: white;
     border: none;
-    transition: background-color 0.3s ease;
+    transition: transform 0.2s ease;
   }
   
   
   .view-all:hover {
-    background-color: #2563eb;
+    transform: translateY(-1px);
   }
   .logout-button {
     background: transparent;

@@ -3,6 +3,95 @@ import { motion } from "framer-motion";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
 
+// --- Styles Object ---
+const styles = {
+    page: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        background: '#3a3a5a', // Fallback color
+        backgroundImage: 'linear-gradient(135deg, #2c3e50, #4a546e)',
+        fontFamily: "'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+        padding: '20px',
+        color: '#f0f0f0',
+    },
+    container: {
+        width: '100%',
+        maxWidth: '800px',
+        padding: '40px',
+        borderRadius: '20px',
+        // Glassmorphism effect
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+    },
+    header: {
+        textAlign: 'center',
+        color: '#a88beb', // A nice purple from the theme
+        marginBottom: '30px',
+        fontSize: '2.5rem',
+    },
+    inputGroup: {
+        marginBottom: '20px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '15px',
+    },
+    input: {
+        padding: '12px 15px',
+        borderRadius: '10px',
+        background: 'rgba(0, 0, 0, 0.2)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        color: '#fff',
+        fontSize: '1rem',
+        flex: 1,
+    },
+    button: {
+        padding: '12px 25px',
+        background: 'linear-gradient(90deg, #6f00ff, #9f55ff)',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '10px',
+        cursor: 'pointer',
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        transition: 'transform 0.2s',
+    },
+    teamList: {
+        listStyle: 'none',
+        padding: 0,
+    },
+    teamItem: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '15px',
+        marginBottom: '10px',
+        background: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: '10px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
+    },
+    iconButton: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        color: '#c4a7f5',
+        fontSize: '1.1rem',
+        transition: 'color 0.2s',
+    },
+    saveButton: {
+        padding: '8px 15px',
+        backgroundColor: '#28a745',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+    }
+};
+
 const TeamsPage = () => {
     const [teams, setTeams] = useState([]);
     const [players, setPlayers] = useState([]);
@@ -12,12 +101,9 @@ const TeamsPage = () => {
     const [editingName, setEditingName] = useState("");
 
     useEffect(() => {
-        // Fetch teams from the backend
         axios.get("http://localhost:1010/api/teams")
             .then((response) => setTeams(response.data))
             .catch((error) => console.error("Error fetching teams:", error));
-
-        // Fetch players from the backend
         axios.get("http://localhost:1010/api/players")
             .then((response) => setPlayers(response.data))
             .catch((error) => console.error("Error fetching players:", error));
@@ -38,20 +124,16 @@ const TeamsPage = () => {
             alert("Please select a player.");
             return;
         }
-
         if (isPlayerInTeam(selectedPlayer)) {
             const confirm = window.confirm(
                 `${selectedPlayer} is already in a team. Do you want to move them to this team?`
             );
             if (!confirm) return;
         }
-
         const teamData = {
             name: newTeam,
             players: [{ name: selectedPlayer }],
         };
-
-        // Save the team to the backend
         axios.post("http://localhost:1010/api/teams", teamData)
             .then((response) => {
                 setTeams([...teams, response.data]);
@@ -62,7 +144,6 @@ const TeamsPage = () => {
     };
 
     const deleteTeam = (id) => {
-        // Delete the team from the backend
         axios.delete(`http://localhost:1010/api/teams/${id}`)
             .then(() => {
                 setTeams(teams.filter((team) => team.id !== id));
@@ -77,8 +158,6 @@ const TeamsPage = () => {
 
     const saveEdit = () => {
         const updatedTeam = { ...teams[editingIndex], name: editingName };
-
-        // Update the team in the backend
         axios.put(`http://localhost:1010/api/teams/${updatedTeam.id}`, updatedTeam)
             .then((response) => {
                 const updatedTeams = [...teams];
@@ -91,139 +170,90 @@ const TeamsPage = () => {
     };
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-            <h1 style={{ textAlign: "center" }}>Teams Management</h1>
-            <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
-                <input
-                    type="text"
-                    placeholder="Enter team name"
-                    value={newTeam}
-                    onChange={(e) => setNewTeam(e.target.value)}
-                    style={{
-                        padding: "10px",
-                        borderRadius: "5px",
-                        border: "1px solid #ccc",
-                        flex: 1,
-                    }}
-                />
-                <select
-                    value={selectedPlayer}
-                    onChange={(e) => setSelectedPlayer(e.target.value)}
-                    style={{
-                        padding: "10px",
-                        borderRadius: "5px",
-                        border: "1px solid #ccc",
-                        flex: 1,
-                    }}
-                >
-                    <option value="">Select a player</option>
-                    {players.map((player) => (
-                        <option key={player.id} value={player.name}>
-                            {player.name}
-                        </option>
-                    ))}
-                </select>
-                <button
-                    onClick={addTeam}
-                    style={{
-                        padding: "10px 20px",
-                        backgroundColor: "#007bff",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                    }}
-                >
-                    Add Team
-                </button>
-            </div>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                {teams.length === 0 ? (
-                    <p style={{ textAlign: "center", color: "#888" }}>No teams added yet.</p>
-                ) : (
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        {teams.map((team, index) => (
-                            <motion.li
-                                key={team.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    padding: "10px",
-                                    marginBottom: "10px",
-                                    backgroundColor: "#f9f9f9",
-                                    borderRadius: "5px",
-                                    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
-                                }}
-                            >
-                                {editingIndex === index ? (
-                                    <input
-                                        type="text"
-                                        value={editingName}
-                                        onChange={(e) => setEditingName(e.target.value)}
-                                        style={{
-                                            flex: 1,
-                                            padding: "5px",
-                                            marginRight: "10px",
-                                            border: "1px solid #ccc",
-                                            borderRadius: "5px",
-                                        }}
-                                    />
-                                ) : (
-                                    <span>{team.name}</span>
-                                )}
-                                <div style={{ display: "flex", gap: "10px" }}>
-                                    {editingIndex === index ? (
-                                        <button
-                                            onClick={saveEdit}
-                                            style={{
-                                                padding: "5px 10px",
-                                                backgroundColor: "#28a745",
-                                                color: "#fff",
-                                                border: "none",
-                                                borderRadius: "5px",
-                                                cursor: "pointer",
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => startEditing(index)}
-                                            style={{
-                                                background: "none",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                color: "#007bff",
-                                            }}
-                                        >
-                                            <FaEdit />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => deleteTeam(team.id)}
-                                        style={{
-                                            background: "none",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            color: "#dc3545",
-                                        }}
-                                    >
-                                        <FaTrash />
-                                    </button>
-                                </div>
-                            </motion.li>
+        <div style={styles.page}>
+            <div style={styles.container}>
+                <h1 style={styles.header}>Teams Management</h1>
+                <div style={styles.inputGroup}>
+                    <input
+                        type="text"
+                        placeholder="Enter team name"
+                        value={newTeam}
+                        onChange={(e) => setNewTeam(e.target.value)}
+                        style={styles.input}
+                    />
+                    <select
+                        value={selectedPlayer}
+                        onChange={(e) => setSelectedPlayer(e.target.value)}
+                        style={styles.input}
+                    >
+                        <option value="">Select a player</option>
+                        {players.map((player) => (
+                            <option key={player.id} value={player.name}>
+                                {player.name}
+                            </option>
                         ))}
-                    </ul>
-                )}
-            </motion.div>
+                    </select>
+                    <button onClick={addTeam} style={styles.button}>
+                        Add Team
+                    </button>
+                </div>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    {teams.length === 0 ? (
+                        <p style={{ textAlign: "center", color: "#bbb" }}>No teams added yet.</p>
+                    ) : (
+                        <ul style={styles.teamList}>
+                            {teams.map((team, index) => (
+                                <motion.li
+                                    key={team.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    style={styles.teamItem}
+                                >
+                                    {editingIndex === index ? (
+                                        <input
+                                            type="text"
+                                            value={editingName}
+                                            onChange={(e) => setEditingName(e.target.value)}
+                                            style={{...styles.input, marginRight: '10px'}}
+                                        />
+                                    ) : (
+                                        <span>{team.name}</span>
+                                    )}
+                                    <div style={{ display: "flex", gap: "15px", alignItems: 'center' }}>
+                                        {editingIndex === index ? (
+                                            <button onClick={saveEdit} style={styles.saveButton}>
+                                                Save
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => startEditing(index)}
+                                                style={styles.iconButton}
+                                                onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
+                                                onMouseOut={(e) => e.currentTarget.style.color = '#c4a7f5'}
+                                            >
+                                                <FaEdit />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => deleteTeam(team.id)}
+                                            style={{...styles.iconButton, color: '#ff7b7b'}}
+                                            onMouseOver={(e) => e.currentTarget.style.color = '#ff4d4d'}
+                                            onMouseOut={(e) => e.currentTarget.style.color = '#ff7b7b'}
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
+                                </motion.li>
+                            ))}
+                        </ul>
+                    )}
+                </motion.div>
+            </div>
         </div>
     );
 };
